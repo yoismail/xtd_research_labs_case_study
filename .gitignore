@@ -2,3 +2,4 @@
 data/
 logs/
 NOTE.md
+etl/__pycache__/
