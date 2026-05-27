@@ -1,0 +1,7 @@
+aiohttp
+ipykernel
+pyspark==4.1.1
+dotenv
+sqlalchemy
+psycopg2-binary
+pandas
