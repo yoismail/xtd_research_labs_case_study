@@ -10,7 +10,6 @@ setup_logging()
 # ✅ Paths
 BRONZE_FOLDER = Path("data/bronze")
 SILVER_FOLDER = Path("data/silver")
-# This is a FOLDER created by Spark, NOT a single file!
 GOLD_FOLDER = Path("data/gold/gold_carbon_historical.csv")
 SPARK_TEMP = Path("C:/spark_temp")
 
