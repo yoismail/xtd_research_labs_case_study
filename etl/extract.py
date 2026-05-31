@@ -1,4 +1,4 @@
-# Asychonous data extraction from the API
+# Asynchronous data extraction from the API
 import logging
 import aiohttp
 import asyncio
