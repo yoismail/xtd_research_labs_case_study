@@ -12,7 +12,7 @@ from etl.logger import section, setup_logging, timed
 setup_logging()
 
 
-# file path for storing the extracted data
+# folder path for storing the extracted data
 BRONZE_DIR = "data/bronze"
 
 
