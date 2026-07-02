@@ -1,4 +1,4 @@
-# Asynchronous data extraction from the API
+# Asychonous data extraction from the API
 import logging
 import aiohttp
 import asyncio
@@ -46,39 +46,39 @@ async def fetch_carbon_data(session, target_date):
                     async with session.get(url, timeout=20) as response:
                         if response.status == 200:
                             data = await response.json()
-                            # ✅ Check if API actually returned data (sometimes returns empty)
+                            # Check if API actually returned data (sometimes returns empty)
                             if 'data' in data and data['data']:
                                 with open(file_path, "w", encoding="utf-8") as f:
                                     json.dump(data['data'], f,
                                               ensure_ascii=False, indent=4)
                                 logging.info(
-                                    f"✅ Successfully saved {target_date}")
+                                    f"Successfully saved {target_date}")
                             else:
                                 logging.warning(
-                                    f"⚠️ No data returned for {target_date}")
+                                    f"No data returned for {target_date}")
                             return data
 
                         elif response.status == 429:
                             logging.warning(
-                                f"⏳ Rate limited for {target_date}. Attempt {attempt+1}/3")
+                                f"Rate limited for {target_date}. Attempt {attempt+1}/3")
                             await asyncio.sleep(5 * (attempt + 1))
                         else:
                             logging.error(
-                                f"❌ HTTP {response.status} for {target_date}")
+                                f"HTTP {response.status} for {target_date}")
                             await asyncio.sleep(2)  # Wait before retry
 
                 except (aiohttp.ClientError, asyncio.TimeoutError) as e:
                     logging.error(
-                        f"🌐 Network error {target_date} attempt {attempt+1}: {e}")
+                        f"Network error {target_date} attempt {attempt+1}: {e}")
                     await asyncio.sleep(2 * (attempt + 1))
 
-            # ✅ Only reached if all 3 attempts failed
+            # Only reached if all 3 attempts failed
             logging.error(
-                f"❌ FAILED COMPLETELY: {target_date} after 3 attempts")
+                f"FAILED COMPLETELY: {target_date} after 3 attempts")
             return None
 
     except Exception as e:
-        logging.error(f"💥 Exception fetching {target_date}: {e}")
+        logging.error(f"Exception fetching {target_date}: {e}")
         return None
 
 
