@@ -63,7 +63,7 @@ def get_new_bronze_data(spark):
     # List all JSON files in Bronze
     all_files = [f for f in os.listdir(BRONZE_DIR) if f.endswith(".json")]
     if not all_files:
-        logging.info("❌ No files found in Bronze.")
+        logging.info("No files found in Bronze.")
         return None
 
     # Track which files have already been processed
@@ -78,18 +78,18 @@ def get_new_bronze_data(spark):
     new_files = [f for f in all_files if f not in processed]
 
     if not new_files:
-        logging.info("✅ No NEW raw data to process — everything up to date.")
+        logging.info("No NEW raw data to process — everything up to date.")
         return None
 
     logging.info(
-        f"🔍 Found {len(new_files)} NEW file(s) to process")
+        f"Found {len(new_files)} NEW file(s) to process")
 
     # Load only new files
     paths = [f"{BRONZE_DIR}/{f}" for f in new_files]
     raw_df = spark.read.json(paths, multiLine=True)
-    logging.info(f"📥 Loaded {raw_df.count()} new records from Bronze.")
+    logging.info(f"Loaded {raw_df.count()} new records from Bronze.")
 
-    # ✅ Mark these files as processed
+    # Mark these files as processed
     with open(tracker_path, "a") as f:
         f.writelines([line + "\n" for line in new_files])
 
@@ -101,7 +101,7 @@ def transform_bronze_to_silver(raw_df):
     Apply Silver transformations: flatten, explode, pivot.
     Same logic every time — reusable.
     """
-    logging.info("⚙️ Transforming data to Silver format...")
+    logging.info("Transforming data to Silver format...")
 
     exploded_df = raw_df.select(
         F.col("from").alias("timestamp"),
@@ -117,14 +117,14 @@ def transform_bronze_to_silver(raw_df):
         F.col("region.intensity.index").alias("index"),
         F.explode(F.col("region.generationmix")).alias("mix")
     )
-    logging.info(f"📥 Exploded generation mix for {silver_df.count()} records.")
+    logging.info(f"Exploded generation mix for {silver_df.count()} records.")
 
     silver_df_pivoted = silver_df.groupBy(
         "regionid", "shortname", "dno", "timestamp", "intensity", "index"
     ).pivot("mix.fuel").agg(F.first("mix.perc"))
 
     logging.info(
-        f"📥 Pivoted generation mix for {silver_df_pivoted.count()} records.")
+        f"Pivoted generation mix for {silver_df_pivoted.count()} records.")
 
     return silver_df_pivoted
 
@@ -146,12 +146,12 @@ def silver_layer(spark):
 
         # Step 3: Append new data to Silver storage
         new_silver.write.parquet(f"{SILVER_DIR}/silver_data", mode="append")
-        logging.info("✅ New Silver data appended successfully.")
+        logging.info("New Silver data appended successfully.")
 
     # Step 4: Return FULL Silver dataset (old + new)
     full_silver = spark.read.parquet(f"{SILVER_DIR}/silver_data")
     logging.info(
-        f"📦 Full Silver dataset ready — {full_silver.count()} total records.")
+        f"Full Silver dataset ready — {full_silver.count()} total records.")
 
     return full_silver
 
@@ -162,7 +162,7 @@ def gold_layer(silver_df_pivoted):
     Runs every time on ALL available data.
     """
     section("Gold Layer Processing")
-    logging.info("⚙️ Aggregating to daily averages...")
+    logging.info("Aggregating to daily averages...")
 
     gold_df = silver_df_pivoted.withColumn("date_recorded", F.to_date("timestamp")) \
         .groupBy("regionid", "date_recorded") \
@@ -182,12 +182,12 @@ def gold_layer(silver_df_pivoted):
             F.round(F.mean("wind"), 2).alias("fuel_wind")
     ).orderBy("date_recorded", "regionid")
 
-    logging.info(f"✅ Gold layer ready — {gold_df.count()} daily records.")
+    logging.info(f"Gold layer ready — {gold_df.count()} daily records.")
     return gold_df
 
 
 def save_gold_layer(gold_df):
-    logging.info(f"💾 Saving gold to: {GOLD_DIR}/gold_carbon_historical.csv")
+    logging.info(f"Saving gold to: {GOLD_DIR}/gold_carbon_historical.csv")
     gold_df.write.csv(f"{GOLD_DIR}/gold_carbon_historical.csv",
                       header=True, mode="overwrite")
 
@@ -201,18 +201,18 @@ def main(spark):
     try:
         ensure_directories()
 
-        # ✅ Silver: incremental, adds new data automatically
+        # Silver: incremental, adds new data automatically
         silver_df = silver_layer(spark)
 
-        # ✅ Gold: always fresh aggregation of ALL data
+        # Gold: always fresh aggregation of ALL data
         gold_df = gold_layer(silver_df)
 
         save_gold_layer(gold_df)
 
-        logging.info("✅ FULL PIPELINE COMPLETED — ALL NEW DATA INCLUDED!")
+        logging.info("FULL PIPELINE COMPLETED — ALL NEW DATA INCLUDED!")
 
     except Exception as e:
-        logging.error(f"❌ Pipeline failed: {e}")
+        logging.error(f"Pipeline failed: {e}")
         raise
 
 
@@ -222,7 +222,7 @@ if __name__ == "__main__":
         spark = create_spark_session()
         main(spark)
     except Exception as e:
-        logging.error(f"❌ Fatal error: {e}")
+        logging.error(f"Fatal error: {e}")
     finally:
         if spark:
             spark.stop()
