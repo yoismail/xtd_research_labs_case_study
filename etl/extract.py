@@ -90,13 +90,17 @@ async def run_extraction():
     end_date = date(2024, 12, 31)
     current = start_date
 
+    # Creates an empty list to store all the API requests we want to run.
+    # Purpose: We collect all tasks first, then run them together.
     tasks = []
+
     # Apply rate limiting to reduce simultaneous connections (this ultimately prevents IP bans)
     connector = aiohttp.TCPConnector(limit=5)
     async with aiohttp.ClientSession(connector=connector) as session:
         while current <= end_date:
             tasks.append(fetch_carbon_data(session, current))
             current += timedelta(days=1)
+        # Runs all the tasks in the list at the same time (up to our limit of 5).
         await asyncio.gather(*tasks)
 
 
